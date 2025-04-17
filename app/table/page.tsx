@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Cookies from "js-cookie";
 import { Tooltip } from "@heroui/tooltip";
 import { Button } from "@heroui/button";
 import {
@@ -30,6 +31,20 @@ export default function MemeTable() {
   const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
   const modalOpenProps = useRef<() => void>(() => {});
 
+  useEffect(() => {
+    const saved = Cookies.get("memes");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setMemes(parsed as Meme[]);
+        }
+      } catch (e) {
+        console.error("❌ Помилка при читанні cookies:", e);
+      }
+    }
+  }, []);
+
   const handleClick = (meme: Meme) => {
     setSelectedMeme(meme); // спочатку встановлюємо мема
     setTimeout(() => {
@@ -37,21 +52,25 @@ export default function MemeTable() {
     }, 0);
   };
 
-  //  const handleEditClick = (meme: Meme) => {
-  //    setSelectedMeme(meme); // обираємо мема
-  //    openModalRef.current(); // відкриваємо модалку через onOpen
-  //  };
+  const handleMemeChange = (updated: Meme) => {
+    setSelectedMeme(updated);
+  };
 
-  //  const handleMemeChange = (updated: Meme) => {
-  //    setSelectedMeme(updated);
-  //  };
+  const handleSave = () => {
+    if (!selectedMeme) return;
+    setMemes((prev) =>
+      prev.map((m) => (m.id === selectedMeme.id ? selectedMeme : m))
+    );
+  };
 
-  //  const handleSave = () => {
-  //    if (!selectedMeme) return;
-  //    setMemes((prev) =>
-  //      prev.map((m) => (m.id === selectedMeme.id ? selectedMeme : m))
-  //    );
-  //  };
+  const handleResetMemes = () => {
+    Cookies.remove("memes"); // видаляємо куки
+    setMemes(defaultMemes); // повертаємо за замовчуванням
+  };
+
+  useEffect(() => {
+    Cookies.set("memes", JSON.stringify(memes), { expires: 7 }); // зберігаємо на 7 днів
+  }, [memes]);
 
   const renderCell = useCallback((meme: Meme, columnKey: string) => {
     switch (columnKey) {
@@ -96,28 +115,7 @@ export default function MemeTable() {
       <Table isStriped aria-label="Memes Guid">
         <TableHeader columns={columns}>
           {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "action" ? "center" : "start"}
-              //className={
-              //  column.uid === "id"
-              //    ? "w-1/9  py-[4px]"
-              //    : column.uid === "title"
-              //    ? "w-1/5  py-[4px]"
-              //    : column.uid === "image"
-              //    ? "w-1/3  py-[4px]"
-              //    : column.uid === "likes"
-              //    ? "w-1/9  py-[4px]"
-              //    : column.uid === "action"
-              //    ? "w-1/9 text-center py-[4px]"
-              //    : "text-center"
-              //}
-              //  className={`py-[4px] ${
-              //    column.uid === "action" ? "text-left" : ""
-              //  }`}
-            >
-              {column.name}
-            </TableColumn>
+            <TableColumn key={column.uid}>{column.name}</TableColumn>
           )}
         </TableHeader>
         <TableBody items={memes}>
@@ -134,8 +132,8 @@ export default function MemeTable() {
       </Table>
       <ModalComponent
         meme={selectedMeme}
-        //onChange={handleMemeChange}
-        //onSave={handleSave}
+        onChange={handleMemeChange}
+        onSave={handleSave}
         modalOpen={(fn) => {
           modalOpenProps.current = fn;
         }}
@@ -166,6 +164,11 @@ export default function MemeTable() {
           </ModalContent>
         </Modal>
       )}*/}
+      <div className="my-4 flex justify-center">
+        <Button color="warning" variant="flat" onPress={handleResetMemes}>
+          Скинути зміни
+        </Button>
+      </div>
     </>
   );
 }
