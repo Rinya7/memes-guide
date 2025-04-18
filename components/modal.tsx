@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect } from "react";
+
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@heroui/button";
 import {
   Modal,
@@ -12,6 +13,7 @@ import {
 import { Input } from "@heroui/input";
 
 import { Meme } from "@/types/meme";
+
 type Props = {
   meme: Meme | null;
   onChange: (meme: Meme) => void;
@@ -26,84 +28,118 @@ const ModalComponent: React.FC<Props> = ({
   modalOpen,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  // передаємо onOpen зовні один раз при ініціалізації
-  //  modalOpen()={onOpen();};
+
+  const [errors, setErrors] = useState({
+    title: "",
+    image: "",
+    likes: "",
+  });
+
   useEffect(() => {
     if (modalOpen) {
       modalOpen(() => {
-        onOpen(); // ось він — магічний виклик
-        //console.log("meme", meme);
+        onOpen();
       });
     }
   }, [modalOpen, onOpen]);
-  if (!meme) return null;
 
   const handleChange = (field: keyof Meme, value: string | number) => {
-    onChange({ ...meme, [field]: value });
+    if (!meme) return;
+    const updated = { ...meme, [field]: value };
+
+    onChange(updated);
+    validateField(field, value);
   };
 
+  const validateField = (field: keyof Meme, value: string | number) => {
+    let message = "";
+
+    switch (field) {
+      case "title":
+        if (typeof value !== "string" || value.trim().length < 3) {
+          message = "Мінімум 3 символи";
+        } else if (value.length > 100) {
+          message = "Максимум 100 символів";
+        }
+        break;
+
+      case "image":
+        if (typeof value !== "string" || !/^https?:\/\/.+\.jpg$/i.test(value)) {
+          message = "Повне посилання на JPG (http/https)";
+        }
+        break;
+
+      case "likes":
+        const num = Number(value);
+
+        if (!Number.isInteger(num) || num < 0 || num > 99) {
+          message = "Введіть число від 0 до 99";
+        }
+        break;
+    }
+
+    setErrors((prev) => ({ ...prev, [field]: message }));
+  };
+
+  const isValid = useMemo(() => {
+    return !errors.title && !errors.image && !errors.likes;
+  }, [errors]);
+
+  const handleSave = () => {
+    if (isValid) {
+      onSave();
+      onClose();
+    }
+  };
+
+  if (!meme) return null;
+
   return (
-    //<Modal isOpen={isOpen} size="sm" onClose={onClose}>
-    //  <ModalContent>
-    //    {(onClose) => (
-    //      <>
-    //        <ModalHeader className="flex flex-col gap-1">
-    //          Edit Meme - {meme.title}
-    //        </ModalHeader>
-    //        <ModalBody>
-    //          <p>ID: {meme.id}</p>
-    //          <p>Image: {meme.image}</p>
-    //          <p>Likes: {meme.likes}</p>
-    //        </ModalBody>
-    //        <ModalFooter>
-    //          <Button color="danger" variant="light" onPress={onClose}>
-    //            Close
-    //          </Button>
-    //          <Button color="primary" onPress={onClose}>
-    //            Save (stub)
-    //          </Button>
-    //        </ModalFooter>
-    //      </>
-    //    )}
-    //  </ModalContent>
-    //</Modal>
     <Modal isOpen={isOpen} size="sm" onClose={onClose}>
       <ModalContent>
         {(close) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              Edit Meme — {meme.title}
+              Редагування мема
             </ModalHeader>
             <ModalBody className="flex flex-col gap-4">
+              <Input label="ID" isReadOnly value={String(meme.id)} />
               <Input
-                label="Title"
+                label="Назва"
                 value={meme.title}
                 onChange={(e) => handleChange("title", e.target.value)}
+                isInvalid={!!errors.title}
+                errorMessage={errors.title}
+                isRequired
               />
               <Input
-                label="Image URL"
+                label="Картинка (URL .jpg)"
                 value={meme.image}
                 onChange={(e) => handleChange("image", e.target.value)}
+                isInvalid={!!errors.image}
+                errorMessage={errors.image}
+                isRequired
               />
               <Input
-                label="Likes"
+                label="Кількість лайків"
                 type="number"
-                value={meme.likes}
+                value={String(meme.likes)}
                 onChange={(e) => handleChange("likes", Number(e.target.value))}
+                isInvalid={!!errors.likes}
+                errorMessage={errors.likes}
+                isRequired
               />
             </ModalBody>
             <ModalFooter>
               <Button color="danger" variant="light" onPress={close}>
-                Cancel
+                Скасувати
               </Button>
               <Button
                 color="primary"
-                onPress={() => {
-                  onSave(); // збереження
-                  close(); // закриваємо модалку
-                }}
+                onPress={handleSave}
+                isDisabled={!isValid}
               >
-                Save
+                Зберегти
               </Button>
             </ModalFooter>
           </>

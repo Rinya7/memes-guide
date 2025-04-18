@@ -44,9 +44,9 @@ export const Navbar = () => {
         </ul>
       </NavbarContent>
 
-      <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
+      <NavbarContent className="  basis-1 pl-4" justify="end">
         <ThemeSwitch />
-        <NavbarMenuToggle />
+        <NavbarMenuToggle className="sm:hidden" />
       </NavbarContent>
 
       <NavbarMenu>
