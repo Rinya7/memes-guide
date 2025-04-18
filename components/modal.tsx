@@ -103,31 +103,31 @@ const ModalComponent: React.FC<Props> = ({
               Редагування мема
             </ModalHeader>
             <ModalBody className="flex flex-col gap-4">
-              <Input label="ID" isReadOnly value={String(meme.id)} />
+              <Input isReadOnly label="ID" value={String(meme.id)} />
               <Input
+                isRequired
+                errorMessage={errors.title}
+                isInvalid={!!errors.title}
                 label="Назва"
                 value={meme.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                isInvalid={!!errors.title}
-                errorMessage={errors.title}
-                isRequired
               />
               <Input
+                isRequired
+                errorMessage={errors.image}
+                isInvalid={!!errors.image}
                 label="Картинка (URL .jpg)"
                 value={meme.image}
                 onChange={(e) => handleChange("image", e.target.value)}
-                isInvalid={!!errors.image}
-                errorMessage={errors.image}
-                isRequired
               />
               <Input
+                isRequired
+                errorMessage={errors.likes}
+                isInvalid={!!errors.likes}
                 label="Кількість лайків"
                 type="number"
                 value={String(meme.likes)}
                 onChange={(e) => handleChange("likes", Number(e.target.value))}
-                isInvalid={!!errors.likes}
-                errorMessage={errors.likes}
-                isRequired
               />
             </ModalBody>
             <ModalFooter>
@@ -136,8 +136,8 @@ const ModalComponent: React.FC<Props> = ({
               </Button>
               <Button
                 color="primary"
-                onPress={handleSave}
                 isDisabled={!isValid}
+                onPress={handleSave}
               >
                 Зберегти
               </Button>

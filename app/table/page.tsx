@@ -59,6 +59,7 @@ export default function MemeTable() {
   const handleSave = () => {
     if (!selectedMeme) return;
     setMemes((prev) =>
+      // eslint-disable-next-line prettier/prettier
       prev.map((m) => (m.id === selectedMeme.id ? selectedMeme : m))
     );
   };
@@ -132,11 +133,11 @@ export default function MemeTable() {
       </Table>
       <ModalComponent
         meme={selectedMeme}
-        onChange={handleMemeChange}
-        onSave={handleSave}
         modalOpen={(fn) => {
           modalOpenProps.current = fn;
         }}
+        onChange={handleMemeChange}
+        onSave={handleSave}
       />
       {/*{selectedMeme && (
         <Modal isOpen={isOpen} size="sm" onClose={onClose}>
